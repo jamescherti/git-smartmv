@@ -10,7 +10,7 @@ LONG_DESCRIPTION = \
 
 setup(
     name="git-smartmv",
-    version="1.0.0",
+    version="1.0.1",
     packages=find_packages(),
     description=("A command-line tool that can decide whether to "
                  "use `git mv` or `mv`."),

@@ -30,7 +30,8 @@ alias mv="git-smartmv"
 The `git-smartmv` command-line tool accepts similar arguments as the `mv`
 command, including the source file or directory to be moved, and the
 destination file or directory.
-```usage: git-smartmv [--option] <SOURCE>... <DEST>
+```
+usage: git-smartmv [--option] <SOURCE>... <DEST>
 
 options:
   -w WARNING_THRESHOLD, --warning-threshold WARNING_THRESHOLD
