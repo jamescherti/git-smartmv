@@ -1,4 +1,4 @@
-# Git-smartmv - A tool that can decide whether to use `git mv` or `mv`
+# git-smartmv - A tool that can decide whether to use `git mv` or `mv`
 
 The `git-smartmv` is a command-line tool, written by
 [James Cherti](https://www.jamescherti.com), for moving files and
@@ -18,7 +18,7 @@ source and the destination path:
 sudo pip install git-smartmv
 ```
 
-## Bash Shell Alias
+## Shell alias
 
 It is recommended to add the following alias to `~/.bashrc`:
 ```
@@ -30,6 +30,25 @@ alias mv="git-smartmv"
 The `git-smartmv` command-line tool accepts the same arguments as the `mv`
 command, including the source file or directory to be moved, and the
 destination file or directory.
+```usage: git-smartmv [--option] <SOURCE>... <DEST>
+
+A command-line tool that can decide whether to use `git mv` or `mv`.
+
+positional arguments:
+  args                  Files and/or directories
+
+options:
+  -h, --help            show this help message and exit
+  -w WARNING_THRESHOLD, --warning-threshold WARNING_THRESHOLD
+                        This will raise a warning if the number of files or directories being moved
+                        exceeds the specified amount
+  -v, --verbose         Report the names of the files and/or directories as they are being moved.
+  -f, --force           Force renaming or moving of files and/or directories even if the destination
+                        exists.
+  -p, --non-interactive
+                        Do not prompt the user to confirm before executing 'mv' and/or 'git mv'
+                        commands.
+```
 
 First example:
 ```
@@ -41,9 +60,9 @@ Second example:
 git smartmv file1 file2
 ```
 
-Third example:
+Third example (non-interactive):
 ```
-git smartmv dir1/ dir2/
+git smartmv -f dir1/ dir2/
 ```
 
 ## License

@@ -1,17 +1,26 @@
 #!/usr/bin/env python
-"""A command-line tool that can decide whether to use `git mv` or `mv`.
-
-The `smartmv` is a command-line tool for moving files and directories without
-having to worry about manually choosing whether to use `git mv` or `mv`.
-
-The `smartmv` tool determines whether to use `git mv` or `mv` based on the
-source and the destination path:
-- If the file or directory is being moved within a Git repository,
-  `smartmv` uses `git mv`.
-- If the file is being moved between a Git repository and a non-Git directory
-  or a different Git repository, the `smartmv` tool uses `mv`.
-
-"""
+#
+# git-smartmv - A tool that can decide whether to use git mv or mv
+# URL: https://github.com/jamescherti/git-smartmv
+#
+# Copyright (C) James Cherti
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+"""A command-line tool that can decide whether to use `git mv` or `mv`."""
 
 import argparse
 import logging
@@ -22,32 +31,37 @@ import sys
 from pathlib import Path
 
 
-class SmartmvError(Exception):
-    """Error with `smartmv` command-line interface."""
+class CliError(Exception):
+    """Error with the command-line interface."""
 
 
 class GitError(Exception):
-    """Error with `git`."""
+    """Error with Git."""
 
 
 class Smartmv:
-    """`smartmv` command-line interface."""
+    """The command-line interface."""
 
-    cmd_git_timeout = 60
     exe_name = Path(sys.argv[0]).name
 
     def __init__(self):
+        logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                            format="[%(name)s] %(message)s")
+        self._logger = logging.getLogger(self.exe_name)
+
+        for cmd in ("mv", "git"):
+            if not shutil.which(cmd):
+                err_str = f"{self.exe_name}: '{cmd}': command not found"
+                raise CliError(err_str)
+
         self._reset()
 
     def _reset(self):
         self._args = None
         self._cwd_git_toplevel = None
-
         self._source_paths = []
         self._dest_path = ""
-        self._classified_source_paths = {"mv": [],
-                                         "git mv": []}
-
+        self._classified_source_paths = {"mv": [], "git mv": []}
         self._dest_git_repo = None
         self._mv_commands = {}
 
@@ -59,51 +73,43 @@ class Smartmv:
         except GitError:
             self._cwd_git_toplevel = None
 
-        if not shutil.which("git"):
-            err_str = f"{self.exe_name}: 'git': command not found"
-            raise SmartmvError(err_str)
-
-        # Main calls
         self._parse_args()
-        logging.basicConfig(
-            level=(logging.DEBUG if self._args.verbose else logging.INFO),
-            stream=sys.stdout,
-            format="[%(name)s] %(message)s")
-        self._logger = logging.getLogger(self.exe_name)
 
         self._step1_parse_paths()
         self._step2_classify_paths()
-
-        # Build mv commands
-        self._step3_build_mv_commands()
-        self._step4_warn_too_many_files()
-
-        # Execute mv commands
+        self._step3_gen_mv_commands()
+        self._step4_warn_if_file_count_exceeds_threshold()
         self._step5_execute_mv_commands()
 
     def _parse_args(self):
         desc = str(__doc__).splitlines()[0]
-        usage = "%(prog)s [--option] [args]"
+        usage = "%(prog)s [--option] <SOURCE>... <DEST>"
         parser = argparse.ArgumentParser(description=desc,
                                          usage=usage)
-        parser.add_argument("files", metavar="N", type=str, nargs="+",
+        parser.add_argument("files", metavar="args", type=str, nargs="+",
                             help="Files and/or directories")
 
-        # Arguments that are not ignored
         list_opts = [
-            ("-v", "--verbose"),
-            ("-f", "--force"),
-            ("-i", "--interactive"),
+            ("-v", "--verbose",
+             "Report the names of the files and/or directories as they "
+             "are being moved."),
+
+            ("-f", "--force",
+             "Force renaming or moving of files and/or directories even if "
+             "the destination exists."),
+
+            ("-p", "--non-interactive",
+             "Do not prompt the user to confirm before executing 'mv' "
+             "and/or 'git mv' commands."),
         ]
 
-        # Arguments specific to smartmv
         parser.add_argument(
             "-w",
-            "--warn-amount-files",
+            "--warning-threshold",
             type=int,
             required=False,
             default=-1,
-            help=("This will raise a warning if the number of files"
+            help=("This will raise a warning if the number of files "
                   "or directories being moved exceeds the specified amount"),
         )
 
@@ -142,7 +148,7 @@ class Smartmv:
                     self._dest_path.absolute().parent
                 )
         except GitError:
-            self._dest_git_repo = None  # Git error
+            self._dest_git_repo = None
 
         self._logger.debug("dest_git_repo: %s", str(self._dest_git_repo))
 
@@ -180,7 +186,7 @@ class Smartmv:
             else:
                 self._classified_source_paths["mv"].append(origin_path)
 
-    def _step3_build_mv_commands(self):
+    def _step3_gen_mv_commands(self):
         specify_repo = True
         if self._cwd_git_toplevel and \
                 self._cwd_git_toplevel == self._dest_git_repo:
@@ -209,12 +215,11 @@ class Smartmv:
             if self._args.verbose:
                 self._mv_commands[cmd_type] += ["--verbose"]
 
-            if self._args.force:
-                self._mv_commands[cmd_type] += ["--force"]
+            if cmd_type == "mv" and self._args.force:
+                self._mv_commands[cmd_type] += ["-f"]
 
             self._mv_commands[cmd_type] += \
-                [str(item)
-                 for item in self._classified_source_paths[cmd_type]]
+                [str(item) for item in self._classified_source_paths[cmd_type]]
 
             if cmd_type == "git mv":
                 if self._cwd_git_toplevel and \
@@ -227,22 +232,15 @@ class Smartmv:
             elif cmd_type == "mv":
                 self._mv_commands[cmd_type].append(str(self._dest_path))
 
-    def _step4_warn_too_many_files(self):
+    def _step4_warn_if_file_count_exceeds_threshold(self):
         """Display a warning before moving a large number of files/folders."""
-        if self._args.warn_amount_files <= 0:
+        if self._args.warning_threshold < 0:
             return
 
         # Display
         num_files = 0
         not_displayed_files = set()
         for source_path in self._source_paths:
-            if num_files >= self._args.warn_amount_files:
-                for cur_path in not_displayed_files:
-                    print(cur_path)
-                print(source_path)
-                not_displayed_files = set()
-                continue
-
             if source_path.is_dir():
                 for sub_path in source_path.glob("**/*"):
                     if not sub_path.is_dir():
@@ -252,14 +250,20 @@ class Smartmv:
                 not_displayed_files.add(str(source_path))
                 num_files += 1
 
+            if num_files >= self._args.warning_threshold:
+                for cur_path in not_displayed_files:
+                    print(cur_path)
+                not_displayed_files = set()
+                continue
+
         # Confirm
-        if num_files >= self._args.warn_amount_files:
+        if num_files >= self._args.warning_threshold:
             if not self.confirm(f"Move {num_files} files to "
                                 f"'{self._dest_path}'? [y,n] "):
                 sys.exit(1)
 
     def _step5_execute_mv_commands(self):
-        if self._args.interactive:
+        if not self._args.non_interactive:
             print("Commands:")
             for _, cmd in self._mv_commands.items():
                 print("  ", subprocess.list2cmdline(cmd))
@@ -268,9 +272,17 @@ class Smartmv:
             if not self.confirm("Execute? [y,n] "):
                 sys.exit(1)
 
+        errno = 0
         for _, cmd in self._mv_commands.items():
             print("[RUN]", subprocess.list2cmdline(cmd))
-            subprocess.check_call(cmd)
+            try:
+                subprocess.check_call(cmd)
+            except subprocess.CalledProcessError as err:
+                print(f"Error: {err}.", file=sys.stderr)
+                errno = 1
+
+        if errno:
+            sys.exit(errno)
 
     def is_tracked_by_git(self, path: os.PathLike):
         """Return True if 'path' is being tracked by Git."""
@@ -278,7 +290,7 @@ class Smartmv:
 
         try:
             cmd = ["git", "-C", str(self.get_git_toplevel(path)),
-                   "ls-files", "--error-unmatch", path.absolute()]
+                   "ls-files", "--error-unmatch", str(path.absolute())]
         except GitError:
             return False
 
@@ -290,8 +302,7 @@ class Smartmv:
             subprocess.check_call(cmd,
                                   stdout=subprocess.DEVNULL,
                                   stderr=subprocess.DEVNULL,
-                                  cwd=cwd,
-                                  timeout=Smartmv.cmd_git_timeout)
+                                  cwd=cwd)
         except subprocess.CalledProcessError:
             return False
 
@@ -318,7 +329,6 @@ class Smartmv:
             output = subprocess.check_output(
                 cmd,
                 stderr=subprocess.DEVNULL,
-                timeout=Smartmv.cmd_git_timeout,
                 cwd=cwd,
             )
         except subprocess.CalledProcessError as err:
@@ -339,7 +349,6 @@ class Smartmv:
         while True:
             try:
                 answer = input(prompt)
-
                 if answer.lower() not in ["y", "n"]:
                     continue
 
@@ -356,9 +365,5 @@ class Smartmv:
 
 def command_line_interface():
     """Command line interface."""
-    try:
-        smartmv = Smartmv()
-        smartmv.main()
-    except subprocess.CalledProcessError as err:
-        print(f"Error: {err}.", file=sys.stderr)
-        sys.exit(1)
+    smartmv = Smartmv()
+    smartmv.main()
