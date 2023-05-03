@@ -27,8 +27,10 @@ setup(
         "Environment :: Console",
         "Operating System :: POSIX :: Linux",
         "Operating System :: POSIX :: Other",
-        "Topic :: Text Editors :: Emacs",
-
+        "Operating System :: Unix",
+        "Programming Language :: Unix Shell",
+        "Topic :: Software Development :: Version Control :: Git",
+        "Topic :: System :: Filesystems",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3",
     ],
