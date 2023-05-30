@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 #
-# git-smartmv - A tool that can decide whether to use git mv or mv
-# URL: https://github.com/jamescherti/git-smartmv
+# This file is part of git-smartmv, A tool that can decide whether to use git
+# mv or mv
 #
 # Copyright (C) James Cherti
+# URL: https://github.com/jamescherti/git-smartmv
 #
 # Distributed under terms of the GNU General Public License version 3.
 #
