@@ -13,7 +13,7 @@ destination path:
 
 ## Installation
 
-Here is how to install Ultyas system-wide using pip:
+Here is how to install git-smartmv system-wide using pip:
 ```
 sudo pip install git-smartmv
 ```
