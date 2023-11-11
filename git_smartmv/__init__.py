@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 #
-# This file is part of git-smartmv, A tool that can decide whether to use git
-# mv or mv
-#
 # Copyright (C) James Cherti
 # URL: https://github.com/jamescherti/git-smartmv
 #
