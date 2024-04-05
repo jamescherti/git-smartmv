@@ -29,67 +29,59 @@ class GitError(Exception):
     """Error with Git."""
 
 
-class File():
+class GitFile():
     """A file or a directory."""
 
     def __init__(self, path: os.PathLike):
         self.path = Path(path)
 
     def is_tracked_by_git(self):
-        """Return True if 'path' is being tracked by Git."""
+        """Determines if the path is tracked by Git.
+
+        Returns:
+            True if the path is being tracked by Git, False otherwise.
+        """
         path = self.path
 
         try:
             cmd = ["git", "-C", str(self.git_toplevel()),
-                   "ls-files", "--error-unmatch", str(path.absolute())]
+                   "ls-files", "--error-unmatch", "--", str(path.absolute())]
         except GitError:
             return False
-
-        cwd = path
-        if path.is_file():
-            cwd = path.parent.absolute()
 
         try:
             subprocess.check_call(cmd,
                                   stdout=subprocess.DEVNULL,
-                                  stderr=subprocess.DEVNULL,
-                                  cwd=cwd)
+                                  stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             return False
 
         return True
 
     def git_toplevel(self) -> Path:
-        """Return the top-level Git directory of 'path'."""
-        path = self.path
-        err_str = f"The file is not in a Git directory: '{path}'"
+        """Finds the top-level Git directory for the given path.
 
-        if not path.exists():
-            raise GitError(err_str)
+        Raises:
+            GitError: If the path is not inside a Git repository.
 
-        path = path.absolute()
-
-        if path.is_file():
-            cwd = path.parent
-        else:
-            cwd = path
+        Returns:
+            The Path object pointing to the top-level Git directory.
+        """
+        if not self.path.exists():
+            raise GitError(f"No such file or directory: '{self.path}'")
 
         cmd = ["git", "rev-parse", "--show-toplevel"]
         try:
             output = subprocess.check_output(
                 cmd,
                 stderr=subprocess.DEVNULL,
-                cwd=cwd,
+                cwd=self.path.parent if self.path.is_file() else self.path,
             )
-        except subprocess.CalledProcessError as err:
-            raise GitError(err_str) from err
-
-        try:
             git_repo_path = Path(output.splitlines()[0].decode())
-        except IndexError as err:
+            if not git_repo_path.exists():
+                raise IndexError
+        except (IndexError, subprocess.CalledProcessError) as err:
+            err_str = f"The file is not in a Git directory: '{self.path}'"
             raise GitError(err_str) from err
-
-        if not git_repo_path.exists():
-            raise GitError(err_str)
 
         return git_repo_path
