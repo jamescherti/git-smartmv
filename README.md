@@ -55,7 +55,7 @@ git smartmv --non-interactive dir1/ dir2/
 
 ## License
 
-Copyright (C) 2023-2024 [James Cherti](https://www.jamescherti.com)
+Copyright (C) 2023-2025 [James Cherti](https://www.jamescherti.com)
 
 Distributed under terms of the GNU General Public License version 3.
 

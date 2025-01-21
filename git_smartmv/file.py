@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2023-2024 James Cherti
+# Copyright (C) 2023-2025 James Cherti
 # URL: https://github.com/jamescherti/git-smartmv
 #
 # Distributed under terms of the GNU General Public License version 3.
