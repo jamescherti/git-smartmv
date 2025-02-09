@@ -9,7 +9,7 @@ The `git-smartmv` command-line tool intelligently moves files and directories by
 
 To install *git-smartmv* executable locally in `~/.local/bin/pathaction` using [pip](https://pypi.org/project/pip/), run:
 ```
-sudo pip install git-smartmv
+sudo pip install --user git-smartmv
 ```
 
 (Omitting the `--user` flag will install *git-smartmv* system-wide in `/usr/local/bin/git-smartmv`.)
