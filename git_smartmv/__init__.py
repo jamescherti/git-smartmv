@@ -364,4 +364,8 @@ class Smartmv:
 def command_line_interface():
     """Command line interface."""
     smartmv = Smartmv()
-    smartmv.main()
+    try:
+        smartmv.main()
+    except PermissionError as err:
+        print(f"Error: ", str(err), file=sys.stderr)
+        sys.exit(1)

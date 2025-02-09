@@ -1,3 +1,6 @@
-*.egg-info/
-/build/
-/dist/
+/coverage.json
+/build
+/dist
+/*.egg-info
+*.pyc
+*/__pycache__
