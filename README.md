@@ -1,24 +1,27 @@
 # git-smartmv - A tool that can decide whether to use `git mv` or `mv`
 
-The `git-smartmv` command-line tool allows moving files and/or directories without having to worry about manually choosing whether to use `git mv` or `mv`.
+The `git-smartmv` command-line tool intelligently moves files and directories by automatically selecting either `git mv` or `mv` based on the source and destination paths.
 
-It can determines whether to use `git mv` or `mv` based on the source and the destination path:
-- If the files/directories are being moved within a Git repository, `git-smartmv` uses `git mv`.
-- If the files/directories are being moved between a Git repository and a non-Git directory or a different Git repository, `git-smartmv` uses `mv`.
+- If both the source and destination are within the same Git repository, `git-smartmv` uses `git mv`.
+- If moving files between a Git repository and a non-Git directory or a different Git repository, it defaults to `mv`.
 
 ## Installation
 
-Here is how to install git-smartmv system-wide using pip:
+To install *git-smartmv* executable locally in `~/.local/bin/pathaction` using [pip](https://pypi.org/project/pip/), run:
 ```
 sudo pip install git-smartmv
 ```
 
+(Omitting the `--user` flag will install *git-smartmv* system-wide in `/usr/local/bin/git-smartmv`.)
+
 ## Shell alias
 
-To simplify the usage of this tool, you can add the following line to your `~/.bashrc`:
+To install the *git-smartmv* executable locally in `~/.local/bin/git-smartmv` using [pip](https://pypi.org/project/pip/), run:
 ```
 alias mv="git-smartmv"
 ```
+
+(Omitting the `--user` flag will install *git-smartmv* system-wide in `/usr/local/bin/git-smartmv`.)
 
 ## Usage
 
