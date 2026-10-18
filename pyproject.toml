@@ -1,0 +1,59 @@
+#
+# Copyright (C) 2023-2026 James Cherti
+# URL: https://github.com/jamescherti/git-smartmv
+#
+# Distributed under terms of the GNU General Public License version 3.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+[build-system]
+requires = ["setuptools>=77.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "git-smartmv"
+version = "1.0.5"
+description = "A command-line tool that can decide whether to use 'git mv' or 'mv'."
+readme = "README.md"
+authors = [
+  { name = "James Cherti" }
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.6, <4"
+dependencies = []
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: POSIX :: Other",
+  "Operating System :: Unix",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Unix Shell",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Topic :: System :: Filesystems",
+]
+
+[project.urls]
+Homepage = "https://github.com/jamescherti/git-smartmv"
+Repository = "https://github.com/jamescherti/git-smartmv"
+
+[project.scripts]
+git-smartmv = "git_smartmv:command_line_interface"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["git_smartmv*"]
