@@ -43,8 +43,9 @@ class Smartmv:
     exe_name = Path(sys.argv[0]).name
 
     def __init__(self):
-        logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                            format="[%(name)s] %(message)s")
+        logging.basicConfig(
+            level=logging.INFO, stream=sys.stdout, format="[%(name)s] %(message)s"
+        )
         self._logger = logging.getLogger(self.exe_name)
 
         for cmd in ("mv", "git"):
@@ -82,23 +83,34 @@ class Smartmv:
     def _parse_args(self):
         desc = str(__doc__).splitlines()[0]
         usage = "%(prog)s [--option] <SOURCE>... <DEST>"
-        parser = argparse.ArgumentParser(description=desc,
-                                         usage=usage)
-        parser.add_argument("files", metavar="args", type=str, nargs="+",
-                            help="Files and/or directories")
+        parser = argparse.ArgumentParser(description=desc, usage=usage)
+        parser.add_argument(
+            "files",
+            metavar="args",
+            type=str,
+            nargs="+",
+            help="Files and/or directories",
+        )
 
         list_opts = [
-            ("-v", "--verbose",
-             "Report the names of the files and/or directories as they "
-             "are being moved."),
-
-            ("-f", "--force",
-             "Force renaming or moving of files and/or directories even if "
-             "the destination exists."),
-
-            ("-p", "--non-interactive",
-             "Do not prompt the user to confirm before executing 'mv' "
-             "and/or 'git mv' commands."),
+            (
+                "-v",
+                "--verbose",
+                "Report the names of the files and/or directories as they "
+                "are being moved.",
+            ),
+            (
+                "-f",
+                "--force",
+                "Force renaming or moving of files and/or directories even if "
+                "the destination exists.",
+            ),
+            (
+                "-p",
+                "--non-interactive",
+                "Do not prompt the user to confirm before executing 'mv' "
+                "and/or 'git mv' commands.",
+            ),
         ]
 
         parser.add_argument(
@@ -107,29 +119,37 @@ class Smartmv:
             type=int,
             required=False,
             default=-1,
-            help=("This will raise a warning if the number of files "
-                  "or directories being moved exceeds the specified amount"),
+            help=(
+                "This will raise a warning if the number of files "
+                "or directories being moved exceeds the specified amount"
+            ),
         )
 
         for opt, long_opt, help_str in list_opts:
-            parser.add_argument(opt, long_opt, action="store_true",
-                                default=False, help=help_str)
+            parser.add_argument(
+                opt, long_opt, action="store_true", default=False, help=help_str
+            )
 
         self._args = parser.parse_args()
         if len(self._args.files) < 2:
-            print(f"{self.exe_name}: missing destination file operand after "
-                  f"'{self._args.files[0]}'", file=sys.stderr)
+            print(
+                f"{self.exe_name}: missing destination file operand after "
+                f"'{self._args.files[0]}'",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     def _step1_parse_paths(self):
-        self._source_paths = [Path(item) for item in self._args.files[0: -1]]
+        self._source_paths = [Path(item) for item in self._args.files[0:-1]]
         self._dest_path = Path(self._args.files[-1])
         self._logger.debug("source_paths: %s", str(self._source_paths))
         self._logger.debug("dest_path: %s", str(self._dest_path))
 
         if len(self._source_paths) > 1 and not self._dest_path.is_dir():
-            print(f"{self.exe_name}: target '{self._dest_path}' is not a "
-                  "directory", file=sys.stderr)
+            print(
+                f"{self.exe_name}: target '{self._dest_path}' is not a directory",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         try:
@@ -152,8 +172,11 @@ class Smartmv:
 
         for origin_path in self._source_paths:
             if not (origin_path.is_symlink() or origin_path.exists()):
-                print(f"{self.exe_name}: cannot stat '{origin_path}': "
-                      "No such file or directory", file=sys.stderr)
+                print(
+                    f"{self.exe_name}: cannot stat '{origin_path}': "
+                    "No such file or directory",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
 
     def _step2_classify_paths(self):
@@ -166,16 +189,19 @@ class Smartmv:
                 pass
             else:
                 self._logger.debug("")
-                self._logger.debug("origin_git_repo: %s -> %s",
-                                   str(origin_path), str(origin_git_repo))
+                self._logger.debug(
+                    "origin_git_repo: %s -> %s", str(origin_path), str(origin_git_repo)
+                )
 
                 origin_path_tracked = self.is_tracked_by_git(origin_path)
-                self._logger.debug("origin_is_tracked: %s -> %s",
-                                   str(origin_path), str(origin_path_tracked))
+                self._logger.debug(
+                    "origin_is_tracked: %s -> %s",
+                    str(origin_path),
+                    str(origin_path_tracked),
+                )
 
             if origin_path_tracked and origin_git_repo == self._dest_git_repo:
-                if self._cwd_git_toplevel and \
-                        self._cwd_git_toplevel == origin_git_repo:
+                if self._cwd_git_toplevel and self._cwd_git_toplevel == origin_git_repo:
                     self._classified_source_paths["git mv"].append(origin_path)
                 else:
                     self._classified_source_paths["git mv"].append(
@@ -186,16 +212,15 @@ class Smartmv:
 
     def _step3_gen_mv_commands(self):
         specify_repo = True
-        if self._cwd_git_toplevel and \
-                self._cwd_git_toplevel == self._dest_git_repo:
+        if self._cwd_git_toplevel and self._cwd_git_toplevel == self._dest_git_repo:
             specify_repo = False
 
         commands = {
-            "git mv": ["git"] +
-            (["-C", str(self._dest_git_repo)] if specify_repo else []) +
-            ["mv", "-f"]
-            if self._dest_git_repo else ["git", "mv"],
-
+            "git mv": ["git"]
+            + (["-C", str(self._dest_git_repo)] if specify_repo else [])
+            + ["mv", "-f"]
+            if self._dest_git_repo
+            else ["git", "mv"],
             "mv": ["mv"],
         }
 
@@ -216,17 +241,18 @@ class Smartmv:
             if cmd_type == "mv" and self._args.force:
                 self._mv_commands[cmd_type] += ["-f"]
 
-            self._mv_commands[cmd_type] += \
-                [str(item) for item in self._classified_source_paths[cmd_type]]
+            self._mv_commands[cmd_type] += [
+                str(item) for item in self._classified_source_paths[cmd_type]
+            ]
 
             if cmd_type == "git mv":
-                if self._cwd_git_toplevel and \
-                        self._cwd_git_toplevel == self._dest_git_repo:
+                if (
+                    self._cwd_git_toplevel
+                    and self._cwd_git_toplevel == self._dest_git_repo
+                ):
                     self._mv_commands[cmd_type].append(str(self._dest_path))
                 else:
-                    self._mv_commands[cmd_type].append(
-                        str(self._dest_path.absolute())
-                    )
+                    self._mv_commands[cmd_type].append(str(self._dest_path.absolute()))
             elif cmd_type == "mv":
                 self._mv_commands[cmd_type].append(str(self._dest_path))
 
@@ -256,8 +282,9 @@ class Smartmv:
 
         # Confirm
         if num_files >= self._args.warning_threshold:
-            if not self.confirm(f"Move {num_files} files to "
-                                f"'{self._dest_path}'? [y,n] "):
+            if not self.confirm(
+                f"Move {num_files} files to '{self._dest_path}'? [y,n] "
+            ):
                 sys.exit(1)
 
     def _step5_execute_mv_commands(self):
@@ -287,8 +314,14 @@ class Smartmv:
         path = Path(path)
 
         try:
-            cmd = ["git", "-C", str(self.get_git_toplevel(path)),
-                   "ls-files", "--error-unmatch", str(path.absolute())]
+            cmd = [
+                "git",
+                "-C",
+                str(self.get_git_toplevel(path)),
+                "ls-files",
+                "--error-unmatch",
+                str(path.absolute()),
+            ]
         except GitError:
             return False
 
@@ -297,10 +330,9 @@ class Smartmv:
             cwd = path.parent.absolute()
 
         try:
-            subprocess.check_call(cmd,
-                                  stdout=subprocess.DEVNULL,
-                                  stderr=subprocess.DEVNULL,
-                                  cwd=cwd)
+            subprocess.check_call(
+                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd
+            )
         except subprocess.CalledProcessError:
             return False
 
@@ -309,8 +341,7 @@ class Smartmv:
     def get_git_toplevel(self, path: os.PathLike) -> Path:
         """Return the top-level Git directory of 'path'."""
         path = Path(path)
-        err_str = \
-            f"{self.exe_name}: The file is not in a Git directory: '{path}'"
+        err_str = f"{self.exe_name}: The file is not in a Git directory: '{path}'"
 
         if not path.exists():
             raise GitError(err_str)
