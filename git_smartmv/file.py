@@ -29,7 +29,7 @@ class GitError(Exception):
     """Error with Git."""
 
 
-class File():
+class File:
     """A file or a directory."""
 
     def __init__(self, path: os.PathLike):
@@ -40,8 +40,14 @@ class File():
         path = self.path
 
         try:
-            cmd = ["git", "-C", str(self.git_toplevel()),
-                   "ls-files", "--error-unmatch", str(path.absolute())]
+            cmd = [
+                "git",
+                "-C",
+                str(self.git_toplevel()),
+                "ls-files",
+                "--error-unmatch",
+                str(path.absolute()),
+            ]
         except GitError:
             return False
 
@@ -50,10 +56,9 @@ class File():
             cwd = path.parent.absolute()
 
         try:
-            subprocess.check_call(cmd,
-                                  stdout=subprocess.DEVNULL,
-                                  stderr=subprocess.DEVNULL,
-                                  cwd=cwd)
+            subprocess.check_call(
+                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd
+            )
         except subprocess.CalledProcessError:
             return False
 
