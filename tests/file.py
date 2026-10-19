@@ -15,8 +15,7 @@ def test_file():
         os.makedirs(git_dir)
         try:
             file_path = git_dir.joinpath("file")
-            with open(file_path, "w",
-                      encoding="utf-8") as fhandler:
+            with open(file_path, "w", encoding="utf-8") as fhandler:
                 fhandler.write("Hello world")
             subprocess.check_call(["git", "init"], cwd=git_dir)
 
