@@ -398,5 +398,5 @@ def command_line_interface():
     try:
         smartmv.main()
     except PermissionError as err:
-        print(f"Error: ", str(err), file=sys.stderr)
+        print("Error: ", str(err), file=sys.stderr)
         sys.exit(1)
