@@ -1,5 +1,8 @@
 # git-smartmv - A tool that can decide whether to use `git mv` or `mv`
 
+- Author: James Cherti <[https://www.jamescherti.com/](https://www.jamescherti.com/)>
+- License: GPL
+
 The `git-smartmv` command-line tool intelligently moves files and directories by selecting either `git mv` or `mv` based on the source and destination paths.
 
 - When both the source and destination are within the same Git repository, `git-smartmv` uses `git mv`.
