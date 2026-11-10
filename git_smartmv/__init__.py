@@ -378,16 +378,21 @@ class Smartmv:
         while True:
             try:
                 answer = input(prompt)
-                if answer.lower() not in ["y", "n"]:
-                    continue
-
-                if answer.lower() == "y":
-                    break
-
+            except EOFError:
+                # Piped or closed stdin: treat as "no" instead of crashing.
+                print()
                 return False
             except KeyboardInterrupt:
                 print()
                 sys.exit(1)
+
+            if answer.lower() not in ["y", "n"]:
+                continue
+
+            if answer.lower() == "y":
+                break
+
+            return False
 
         return True
 
